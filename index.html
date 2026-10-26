@@ -47,6 +47,24 @@ footer{text-align:center;color:var(--mut);font-size:.85rem;padding:24px 5vw 40px
 #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,120px);background:var(--g);color:#021;padding:10px 18px;border-radius:99px;font-weight:800;transition:.3s}
 #toast.on{transform:translate(-50%,0)}
 </style>
+<meta name="theme-color" content="#030504">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sacho Deporte">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+#install{background:linear-gradient(135deg,var(--g),var(--g2));color:#021;border-color:var(--g);box-shadow:0 0 22px #22ff5566}
+#install[hidden]{display:none}
+#help{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:20px;background:#000c}
+#help.on{display:flex}
+#help .box{max-width:380px;width:100%;background:var(--card);border:1px solid var(--g);border-radius:18px;padding:22px;box-shadow:0 0 50px #22ff5533}
+#help h3{color:var(--g);margin-bottom:10px}
+#help ol{padding-left:20px;line-height:1.7;color:var(--tx)}
+#help button{margin-top:16px;width:100%}
+</style>
 </head>
 <body>
 <div class="pitch"></div>
@@ -68,6 +86,7 @@ footer{text-align:center;color:var(--mut);font-size:.85rem;padding:24px 5vw 40px
     <button id="theater">🎬 Modo cine</button>
     <button id="full">⛶ Pantalla completa</button>
     <button id="share">📲 Compartir</button>
+    <button id="install">⬇️ Instalar app</button>
   </div>
 </main>
 <div class="ticker"><div id="tk"></div></div>
@@ -84,11 +103,11 @@ footer{text-align:center;color:var(--mut);font-size:.85rem;padding:24px 5vw 40px
     <p style="margin: 5px 0 0 0;"><a href="https://wa.me/5491166508379" target="_blank" style="color: inherit; text-decoration: underline;">WhatsApp: 11 6650-8379</a></p>
   </div>
 </footer>
+  <div id="help"><div class="box"><h3>Instalar Sacho Deporte</h3><ol id="steps"></ol><button id="helpClose">Entendido</button></div></div>
   <div id="toast"></div>
 <script>
 var t=" ⚽ SACHO DEPORTE EN VIVO  •  FÚTBOL Y DEPORTES  •  SEÑAL ONLINE  •  COMPARTÍ EL LINK CON TUS AMIGOS ";
 document.getElementById("tk").textContent=t.repeat(8);
-document.getElementById("y").textContent=new Date().getFullYear();
 var p=document.getElementById("player"),toast=document.getElementById("toast");
 function say(m){toast.textContent=m;toast.classList.add("on");setTimeout(function(){toast.classList.remove("on")},2000)}
 document.getElementById("reload").onclick=function(){var f=p.querySelector("iframe");f.src=f.src;say("Señal recargada")};
@@ -98,6 +117,23 @@ document.getElementById("share").onclick=function(){
   var u=location.href;
   if(navigator.share){navigator.share({title:"Sacho Deporte en vivo",url:u}).catch(function(){})}
   else if(navigator.clipboard){navigator.clipboard.writeText(u).then(function(){say("Link copiado")}).catch(function(){say("No se pudo copiar")})}
+};
+
+// ---- Instalar app (PWA) ----
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})})}
+var ib=document.getElementById("install"),dp=null,help=document.getElementById("help");
+var standalone=window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+var ua=navigator.userAgent,isIOS=/iphone|ipad|ipod/i.test(ua)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+if(standalone){ib.hidden=true}
+window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();dp=e;ib.hidden=false});
+window.addEventListener("appinstalled",function(){ib.hidden=true;dp=null;say("¡App instalada!")});
+function showHelp(list){document.getElementById("steps").innerHTML=list.map(function(x){return"<li>"+x+"</li>"}).join("");help.classList.add("on")}
+document.getElementById("helpClose").onclick=function(){help.classList.remove("on")};
+help.onclick=function(e){if(e.target===help)help.classList.remove("on")};
+ib.onclick=function(){
+  if(dp){dp.prompt();dp.userChoice.then(function(){dp=null;ib.hidden=true})}
+  else if(isIOS){showHelp(["Tocá el botón <b>Compartir</b> (cuadrado con flecha ↑) de Safari","Elegí <b>Agregar a inicio</b>","Tocá <b>Agregar</b>"])}
+  else{showHelp(["Abrí el menú del navegador (⋮)","Elegí <b>Instalar aplicación</b> o <b>Agregar a pantalla de inicio</b>","Confirmá y listo"])}
 };
 </script>
 </body>
